@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>io.github.oengajohn</groupId>
 	<artifactId>employee-service</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>employee-service</name>
 	<description>Employee Service</description>
 	<properties>
@@ -82,6 +82,19 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.4.2</version>
+				<configuration>
+				    <from>
+						<image>eclipse-temurin:17.0.11_9-jdk-ubi9-minimal</image>
+					</from>
+					<to>
+						<image>registry.hub.docker.com/oengajohn/${project.artifactId}:${project.version}</image>
+					</to>
+				</configuration>
+			  </plugin>
 		</plugins>
 	</build>
 

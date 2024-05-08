@@ -10,6 +10,14 @@ import io.github.oengajohn.employeeservice.model.EmployeeResponse;
 import io.github.oengajohn.employeeservice.service.EmployeeService;
 import jakarta.validation.Valid;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
 @RestController
 @RequestMapping("/api/employee")
 public class EmployeeController {
@@ -25,4 +33,20 @@ public class EmployeeController {
         return employeeService.createEmployee(employeeCreateRequest);
     }
     
+    @GetMapping
+    public List<EmployeeResponse> list() {
+        return employeeService.listAll();
+    }
+    
+    @GetMapping("{employeeNumber}")
+    public EmployeeResponse findByEmployeeNumber(@PathVariable(value = "employeeNumber") Integer employeeNumber) {
+        return employeeService.findByEmployeeNumber(employeeNumber);
+    }
+
+    @DeleteMapping("{employeeNumber}")
+    public String deleteByEmployeeNumber(@PathVariable(value = "employeeNumber") Integer employeeNumber) {
+        return employeeService.deleteByEmployeeNumber(employeeNumber);
+    }
+
+
 }

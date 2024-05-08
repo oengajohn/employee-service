@@ -1,0 +1,12 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+    <servers>
+        <server>
+            <id>registry.hub.docker.com</id>
+            <username>your_docker_username</username>
+            <password>your_password</password>
+        </server>
+    </servers>
+    <profiles></profiles>
+</settings>

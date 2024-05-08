@@ -1,5 +1,7 @@
 package io.github.oengajohn.employeeservice.service.impl;
 
+import java.util.List;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,27 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee empReq = modelMapper.map(employeeCreateRequest, Employee.class);
         var savedEmployee = employeeRepository.save(empReq);
         return modelMapper.map(savedEmployee, EmployeeResponse.class);
+    }
+
+    @Override
+    public List<EmployeeResponse> listAll() {
+        return employeeRepository.findAll()
+                .stream()
+                .map(e -> modelMapper.map(e, EmployeeResponse.class))
+                .toList();
+    }
+
+    @Override
+    public EmployeeResponse findByEmployeeNumber(Integer employeeNumber) {
+        return employeeRepository.findById(employeeNumber)
+                .map(e -> modelMapper.map(e, EmployeeResponse.class))
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    }
+
+    @Override
+    public String deleteByEmployeeNumber(Integer employeeNumber) {
+       employeeRepository.deleteById(employeeNumber);
+       return "Success";
     }
 
 }
