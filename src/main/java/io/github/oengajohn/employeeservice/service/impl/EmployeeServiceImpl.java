@@ -5,6 +5,7 @@ import java.util.List;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import io.github.oengajohn.employeeservice.entity.Employee;
@@ -15,17 +16,24 @@ import io.github.oengajohn.employeeservice.model.EmployeeWithDepartment;
 import io.github.oengajohn.employeeservice.repository.EmployeeRepository;
 import io.github.oengajohn.employeeservice.service.EmployeeService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final ModelMapper modelMapper;
     private final WebClient webClient;
+    private final RestClient restClient;
+    private final RestTemplate restTemplate;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository, ModelMapper modelMapper, WebClient webClient) {
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, ModelMapper modelMapper, WebClient webClient,
+            RestClient restClient, RestTemplate restTemplate) {
         this.employeeRepository = employeeRepository;
         this.modelMapper = modelMapper;
         this.webClient = webClient;
+        this.restClient = restClient;
+        this.restTemplate = restTemplate;
     }
 
     @Override
@@ -69,14 +77,37 @@ public class EmployeeServiceImpl implements EmployeeService {
         // http:localhost:8081/api/department/2
         employeesList.stream()
                 .forEach(emp -> {
-                    DepartmentResponse dpt = webClient.get()
-                            .uri("http://localhost:8081/api/department/" + emp.getDepartmentId())
-                            .retrieve()
-                            .bodyToMono(DepartmentResponse.class)
-                            .block();
+                    // DepartmentResponse dpt = getDepartmentUsingWebClient(emp);
+                    // DepartmentResponse dpt = getDepartmentUsingRestClient(emp);
+                    DepartmentResponse dpt = getDepartmentUsingRestTemplate(emp);
                     emp.setDepartmentResponse(dpt);
                 });
         return employeesList;
+    }
+
+    private DepartmentResponse getDepartmentUsingWebClient(EmployeeWithDepartment emp) {
+        log.info("Making the call via WebClient");
+        return webClient.get()
+                .uri("http://localhost:8081/api/department/" + emp.getDepartmentId())
+                .retrieve()
+                .bodyToMono(DepartmentResponse.class)
+                .block();
+    }
+
+    private DepartmentResponse getDepartmentUsingRestClient(EmployeeWithDepartment emp) {
+        log.info("Making the call via RestClient");
+        return restClient.get()
+                .uri("http://localhost:8081/api/department/" + emp.getDepartmentId())
+                .retrieve()
+                .body(DepartmentResponse.class);
+
+    }
+
+    private DepartmentResponse getDepartmentUsingRestTemplate(EmployeeWithDepartment emp) {
+        log.info("Making the call via RestTemplate");
+        return restTemplate.getForObject("http://localhost:8081/api/department/" + emp.getDepartmentId(),
+                DepartmentResponse.class);
+
     }
 
 }
