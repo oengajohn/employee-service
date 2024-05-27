@@ -1,8 +1,15 @@
 package io.github.oengajohn.employeeservice.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
+import org.hibernate.mapping.Collection;
 import org.modelmapper.ModelMapper;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
@@ -66,23 +73,55 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeWithDepartment> getEmployeesWithDepartment() {
-        // TODO: fetch the list of employees
-        // TODO: Get deparment information for the employee
-        // TODO: set the department information
-
         List<EmployeeWithDepartment> employeesList = employeeRepository.findAll()
                 .stream()
                 .map(e -> modelMapper.map(e, EmployeeWithDepartment.class))
                 .toList();
+        // ? Solution 1
+        // setDepartmentInformationByIndividualCalls(employeesList);
+        // return employeesList;
+        // ? Solution 2
+        return getEmployeesByMakingBatchRequestToDepartmentService(employeesList);
+    }
+
+    private List<EmployeeWithDepartment> getEmployeesByMakingBatchRequestToDepartmentService(
+            List<EmployeeWithDepartment> employeesList) {
+
+        log.info("Making the call by batch");
+        // List<Integer> departmentIds =
+        // employeesList.stream().map(emp->emp.getDepartmentId()).toList();
+        List<Integer> departmentIds = employeesList.stream().map(EmployeeWithDepartment::getDepartmentId).toList();
+
+        // http://localhost:8081/api/department/batch
+        // [1,2,4,7]
+        List<DepartmentResponse> departments = restClient.post()
+                .uri("http://localhost:8081/api/department/batch")
+                .body(departmentIds)
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<DepartmentResponse>>() {
+                });
+        if (departments == null) {
+            departments = new ArrayList<>();
+        }
+        Map<Integer, DepartmentResponse> departmentMap = departments.stream()
+                .collect(Collectors.toMap(DepartmentResponse::getDepartmentNumber, Function.identity()));
+        return employeesList.stream()
+                .map(emp -> {
+                    emp.setDepartmentResponse(departmentMap.get(emp.getDepartmentId()));
+                    return emp;
+                })
+                .toList();
+    }
+
+    private void setDepartmentInformationByIndividualCalls(List<EmployeeWithDepartment> employeesList) {
         // http:localhost:8081/api/department/2
         employeesList.stream()
                 .forEach(emp -> {
                     // DepartmentResponse dpt = getDepartmentUsingWebClient(emp);
-                    // DepartmentResponse dpt = getDepartmentUsingRestClient(emp);
-                    DepartmentResponse dpt = getDepartmentUsingRestTemplate(emp);
+                    // DepartmentResponse dpt = getDepartmentUsingRestTemplate(emp);
+                    DepartmentResponse dpt = getDepartmentUsingRestClient(emp);
                     emp.setDepartmentResponse(dpt);
                 });
-        return employeesList;
     }
 
     private DepartmentResponse getDepartmentUsingWebClient(EmployeeWithDepartment emp) {
