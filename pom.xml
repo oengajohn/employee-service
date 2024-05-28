@@ -97,7 +97,7 @@
 					</from>
 					<to>
 						<image>
-							registry.hub.docker.com/oengajohn/${project.artifactId}:${project.version}</image>
+							registry.hub.docker.com/oengajohn/${project.artifactId}:latest</image>
 					</to>
 				</configuration>
 			</plugin>

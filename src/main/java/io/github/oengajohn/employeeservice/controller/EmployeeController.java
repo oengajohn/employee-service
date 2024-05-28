@@ -47,7 +47,7 @@ public class EmployeeController {
         return employeeService.deleteByEmployeeNumber(employeeNumber);
     }
 
-    @GetMapping("with-department")
+    @GetMapping("with-department/fetch")
     public List<EmployeeWithDepartment> getEmployeesWithDepartment() {
         return employeeService.getEmployeesWithDepartment();
     }

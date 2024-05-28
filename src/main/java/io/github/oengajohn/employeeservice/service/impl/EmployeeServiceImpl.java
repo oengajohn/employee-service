@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import org.hibernate.mapping.Collection;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -33,6 +32,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final WebClient webClient;
     private final RestClient restClient;
     private final RestTemplate restTemplate;
+
+    @Value("${department-service-host-url}")
+    private String departmentServiceHostUrl;
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository, ModelMapper modelMapper, WebClient webClient,
             RestClient restClient, RestTemplate restTemplate) {
@@ -95,7 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // http://localhost:8081/api/department/batch
         // [1,2,4,7]
         List<DepartmentResponse> departments = restClient.post()
-                .uri("http://localhost:8081/api/department/batch")
+                .uri(departmentServiceHostUrl + "/api/department/batch")
                 .body(departmentIds)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<DepartmentResponse>>() {
@@ -127,7 +129,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private DepartmentResponse getDepartmentUsingWebClient(EmployeeWithDepartment emp) {
         log.info("Making the call via WebClient");
         return webClient.get()
-                .uri("http://localhost:8081/api/department/" + emp.getDepartmentId())
+                .uri(departmentServiceHostUrl + "/api/department/" + emp.getDepartmentId())
                 .retrieve()
                 .bodyToMono(DepartmentResponse.class)
                 .block();
@@ -136,7 +138,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private DepartmentResponse getDepartmentUsingRestClient(EmployeeWithDepartment emp) {
         log.info("Making the call via RestClient");
         return restClient.get()
-                .uri("http://localhost:8081/api/department/" + emp.getDepartmentId())
+                .uri(departmentServiceHostUrl + "/api/department/" + emp.getDepartmentId())
                 .retrieve()
                 .body(DepartmentResponse.class);
 
@@ -144,7 +146,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private DepartmentResponse getDepartmentUsingRestTemplate(EmployeeWithDepartment emp) {
         log.info("Making the call via RestTemplate");
-        return restTemplate.getForObject("http://localhost:8081/api/department/" + emp.getDepartmentId(),
+        return restTemplate.getForObject(departmentServiceHostUrl + "/api/department/" + emp.getDepartmentId(),
                 DepartmentResponse.class);
 
     }
