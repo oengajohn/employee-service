@@ -1,15 +1,15 @@
-@host=http://127.0.0.1:54897
+@host=http://127.0.0.1:7000
 ### Create Employee
 POST {{host}}/api/employee HTTP/1.1
 Content-Type: application/json
 
 {
     "birthDate":"1998-10-10",
-    "firstName":"John",
-    "lastName":"Doe",
+    "firstName":"Wilfred",
+    "lastName":"William",
     "gender":"MALE",
     "hireDate":"2022-01-01",
-    "departmentId":1
+    "departmentId":2
 }
 ### List All Employees
 GET {{host}}/api/employee HTTP/1.1
@@ -18,7 +18,7 @@ GET {{host}}/api/employee HTTP/1.1
 GET {{host}}/api/employee/2 HTTP/1.1
 
 ### Delete By Employee Number
-DELETE {{host}}/api/employee/2 HTTP/1.1
+DELETE {{host}}/api/employee/4 HTTP/1.1
 
 
 ### List Employees With Department Info

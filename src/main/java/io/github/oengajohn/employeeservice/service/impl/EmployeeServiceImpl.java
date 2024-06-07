@@ -29,19 +29,20 @@ import lombok.extern.slf4j.Slf4j;
 public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final ModelMapper modelMapper;
-    private final WebClient webClient;
-    private final RestClient restClient;
+    private final WebClient.Builder webClientBuilder;
+    private final RestClient.Builder restClientBuilder;
     private final RestTemplate restTemplate;
 
     @Value("${department-service-host-url}")
     private String departmentServiceHostUrl;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository, ModelMapper modelMapper, WebClient webClient,
-            RestClient restClient, RestTemplate restTemplate) {
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, ModelMapper modelMapper,
+            WebClient.Builder webClientBuilder,
+            RestClient.Builder restClientBuilder, RestTemplate restTemplate) {
         this.employeeRepository = employeeRepository;
         this.modelMapper = modelMapper;
-        this.webClient = webClient;
-        this.restClient = restClient;
+        this.webClientBuilder = webClientBuilder;
+        this.restClientBuilder = restClientBuilder;
         this.restTemplate = restTemplate;
     }
 
@@ -80,10 +81,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .map(e -> modelMapper.map(e, EmployeeWithDepartment.class))
                 .toList();
         // ? Solution 1
-        // setDepartmentInformationByIndividualCalls(employeesList);
-        // return employeesList;
+        setDepartmentInformationByIndividualCalls(employeesList);
+        return employeesList;
         // ? Solution 2
-        return getEmployeesByMakingBatchRequestToDepartmentService(employeesList);
+        // return getEmployeesByMakingBatchRequestToDepartmentService(employeesList);
     }
 
     private List<EmployeeWithDepartment> getEmployeesByMakingBatchRequestToDepartmentService(
@@ -96,7 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         // http://localhost:8081/api/department/batch
         // [1,2,4,7]
-        List<DepartmentResponse> departments = restClient.post()
+        List<DepartmentResponse> departments = restClientBuilder.build().post()
                 .uri(departmentServiceHostUrl + "/api/department/batch")
                 .body(departmentIds)
                 .retrieve()
@@ -107,6 +108,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         Map<Integer, DepartmentResponse> departmentMap = departments.stream()
                 .collect(Collectors.toMap(DepartmentResponse::getDepartmentNumber, Function.identity()));
+
         return employeesList.stream()
                 .map(emp -> {
                     emp.setDepartmentResponse(departmentMap.get(emp.getDepartmentId()));
@@ -119,16 +121,16 @@ public class EmployeeServiceImpl implements EmployeeService {
         // http:localhost:8081/api/department/2
         employeesList.stream()
                 .forEach(emp -> {
-                    // DepartmentResponse dpt = getDepartmentUsingWebClient(emp);
+                    DepartmentResponse dpt = getDepartmentUsingWebClient(emp);
                     // DepartmentResponse dpt = getDepartmentUsingRestTemplate(emp);
-                    DepartmentResponse dpt = getDepartmentUsingRestClient(emp);
+                    // DepartmentResponse dpt = getDepartmentUsingRestClient(emp);
                     emp.setDepartmentResponse(dpt);
                 });
     }
 
     private DepartmentResponse getDepartmentUsingWebClient(EmployeeWithDepartment emp) {
         log.info("Making the call via WebClient");
-        return webClient.get()
+        return webClientBuilder.build().get()
                 .uri(departmentServiceHostUrl + "/api/department/" + emp.getDepartmentId())
                 .retrieve()
                 .bodyToMono(DepartmentResponse.class)
@@ -137,7 +139,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private DepartmentResponse getDepartmentUsingRestClient(EmployeeWithDepartment emp) {
         log.info("Making the call via RestClient");
-        return restClient.get()
+        return restClientBuilder.build().get()
                 .uri(departmentServiceHostUrl + "/api/department/" + emp.getDepartmentId())
                 .retrieve()
                 .body(DepartmentResponse.class);
